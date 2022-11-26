@@ -20,6 +20,7 @@ async function run() {
     try {
         const categoryCollection = client.db('motorbike').collection('categories');
         const bikeCollection = client.db('motorbike').collection('bikes');
+        const bookingsCollection = client.db('motorbike').collection('bookings');
         // const standardBikeCollection = client.db('motorbike').collection('standardBike');
         // const cruiserBikeCollection = client.db('motorbike').collection('cruiserBike');
         
@@ -34,7 +35,6 @@ async function run() {
             console.log
             const query = { _id : ObjectId(id)};
             const categoryList = await categoryCollection.findOne(query);
-            // const BikeQuery = {id: id}; 
             res.send(categoryList);
         })
         
@@ -44,7 +44,13 @@ async function run() {
             const bikesList = await bikeCollection.find(query).toArray(); 
             res.send(bikesList);
         })
-        
+
+        app.post('/bookings', async(req, res) =>{
+            const booking = req.body;
+            const query = {};
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        })
     } 
     finally {
         
