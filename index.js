@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { query } = require('express');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -24,17 +25,25 @@ async function run() {
         
         app.get('/categories', async(req, res) => {
             const query = {};
-            const option = await categoryCollection.find(query).toArray(); 
-            res.send(option);
+            const categoryList = await categoryCollection.find(query).toArray(); 
+            res.send(categoryList);
         })
 
         app.get('/categories/:id', async(req, res) => {
             id = req.params.id;
+            console.log
             const query = { _id : ObjectId(id)};
-            const option = await categoryCollection.findOne(query); 
-            res.send(option);
+            const categoryList = await categoryCollection.findOne(query);
+            // const BikeQuery = {id: id}; 
+            res.send(categoryList);
         })
         
+        app.get('/bikes', async(req, res) => {
+            const id = req.query.id
+            const query = {id: id};
+            const bikesList = await bikeCollection.find(query).toArray(); 
+            res.send(bikesList);
+        })
         
     } 
     finally {
