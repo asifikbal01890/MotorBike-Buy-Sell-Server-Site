@@ -23,8 +23,6 @@ async function run() {
         const bikeCollection = client.db('motorbike').collection('bikes');
         const bookingsCollection = client.db('motorbike').collection('bookings');
         const usersCollection = client.db('motorbike').collection('users');
-        // const standardBikeCollection = client.db('motorbike').collection('standardBike');
-        // const cruiserBikeCollection = client.db('motorbike').collection('cruiserBike');
 
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -46,18 +44,6 @@ async function run() {
             const bikesList = await bikeCollection.find(query).toArray();
             res.send(bikesList);
         })
-
-        // app.get('/mybikes', async (req, res) => {
-        //     const email = req.query.email;
-        //     console.log(email);
-        //     const decodedEmail = req.decoded.email;
-        //     // if( email !== decodedEmail){
-        //     //     return res.status(403).send({message: 'forbidden access'});
-        //     // }
-        //     const query = {};
-        //     const bikesList = await bikeCollection.find(query).toArray();
-        //     res.send(bikesList);
-        // })
 
         app.post('/bikes', async (req, res) => {
             const bike = req.body;
@@ -86,6 +72,13 @@ async function run() {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
             res.send(result);
+        })
+
+        app.get('/users/seller', async (req, res) => {
+            const role = req.role !== true;
+            const query = {role};
+            const sellers = await usersCollection.find(query).toArray();
+            res.send(sellers);
         })
 
         app.get('/users/admin/:email', async (req, res) => {
