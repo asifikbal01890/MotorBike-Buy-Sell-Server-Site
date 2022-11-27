@@ -16,6 +16,7 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vh3xqbm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
 async function run() {
     try {
         const categoryCollection = client.db('motorbike').collection('categories');
@@ -40,11 +41,23 @@ async function run() {
         })
 
         app.get('/bikes', async (req, res) => {
-            const id = req.query.id
+            const id = req.query.id;
             const query = { id: id };
             const bikesList = await bikeCollection.find(query).toArray();
             res.send(bikesList);
         })
+
+        // app.get('/mybikes', async (req, res) => {
+        //     const email = req.query.email;
+        //     console.log(email);
+        //     const decodedEmail = req.decoded.email;
+        //     // if( email !== decodedEmail){
+        //     //     return res.status(403).send({message: 'forbidden access'});
+        //     // }
+        //     const query = {};
+        //     const bikesList = await bikeCollection.find(query).toArray();
+        //     res.send(bikesList);
+        // })
 
         app.post('/bikes', async (req, res) => {
             const bike = req.body;
@@ -73,6 +86,13 @@ async function run() {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
             res.send(result);
+        })
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {email}
+            const user = await usersCollection.findOne(query);
+            res.send({isAdmin: user?.role === 'admin'});
         })
     }
     finally {
