@@ -46,9 +46,14 @@ async function run() {
             res.send(bikesList);
         })
 
+        app.post('/bikes', async (req, res) => {
+            const bike = req.body;
+            const result = await bikeCollection.insertOne(bike);
+            res.send(result);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
-            const query = {};
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         })
