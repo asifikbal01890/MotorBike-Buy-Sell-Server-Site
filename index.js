@@ -81,6 +81,33 @@ async function run() {
             res.send(sellers);
         })
 
+        app.put('/users/seller/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    verify: 'verified'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const user = await usersCollection.deleteOne(filter);
+            res.send(user);
+        })
+
+        app.get('/users/buyer', async (req, res) => {
+            const role = req.role === true;
+            const query = {role};
+            const buyers = await usersCollection.find(query).toArray();
+            res.send(buyers);
+        })
+
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = {email}
@@ -101,6 +128,7 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({isBuyer: user?.role === false});
         })
+
     }
     finally {
 
