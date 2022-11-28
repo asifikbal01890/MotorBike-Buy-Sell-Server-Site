@@ -58,6 +58,33 @@ async function run() {
             res.send(bikes);
         });
 
+        app.delete('/bikes/my/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const bike = await bikeCollection.deleteOne(filter);
+            res.send(bike);
+        })
+
+        app.get('/bikes/ads', async (req, res) => {
+            const ads = req.role !== false;
+            const query = {ads};
+            const bikeAds = await bikeCollection.find(query).toArray();
+            res.send(bikeAds);
+        })
+
+        app.put('/bikes/ads/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    ads: true
+                }
+            }
+            const result = await bikeCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingsCollection.insertOne(booking);
