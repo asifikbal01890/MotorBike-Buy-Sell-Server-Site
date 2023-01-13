@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const SSLCommerzPayment = require('sslcommerz-lts');
 require('dotenv').config();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 const port = process.env.PORT || 5000;
-
 const app = express();
+
+const store_id = process.env.STORE_ID;
+const store_passwd = process.env.STORE_PASS;
+const is_live = false //true for live, false for sandbox
 
 // middleware
 app.use(cors());
@@ -107,36 +109,51 @@ async function run() {
             res.send(booking);
         })
 
-        app.post('/create-payment-intent', async (req, res) => {
-            const booking = req.body;
-            const price = booking.price;
-            const amount = price * 100;
+        app.get('/bookings/payment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const booking = await bookingsCollection.findOne(query);
 
-            const paymentIntent = await stripe.paymentIntents.create({
-                currency: 'bdt',
-                amount: amount,
-                "payment_method_types": [
-                    "card"
-                ]
+            const transactionId = new ObjectId().toString();
+            const data = {
+                total_amount: parseInt(booking.price),
+                currency: 'BDT',
+                tran_id: transactionId, // use unique tran_id for each api call
+                success_url: 'http://localhost:3030/success',
+                fail_url: 'http://localhost:3030/fail',
+                cancel_url: 'http://localhost:3030/cancel',
+                ipn_url: 'http://localhost:3030/ipn',
+                shipping_method: 'Courier',
+                product_name: booking.itemName,
+                product_category: 'Electronic',
+                product_profile: 'general',
+                cus_name: booking.userName,
+                cus_email: booking.email,
+                cus_add1: 'Dhaka',
+                cus_add2: 'Dhaka',
+                cus_city: booking.location,
+                cus_state: 'Dhaka',
+                cus_postcode: '1000',
+                cus_country: 'Bangladesh',
+                cus_phone: booking.phone,
+                cus_fax: '01711111111',
+                ship_name: 'Customer Name',
+                ship_add1: 'Dhaka',
+                ship_add2: 'Dhaka',
+                ship_city: 'Dhaka',
+                ship_state: 'Dhaka',
+                ship_postcode: 1000,
+                ship_country: 'Bangladesh',
+            };
+            console.log(data)
+            const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+            sslcz.init(data).then(apiResponse => {
+                // console.log(apiResponse);
+                // Redirect the user to payment gateway
+                let GatewayPageURL = apiResponse.GatewayPageURL;
+                res.send({url: GatewayPageURL});
             });
-            res.send({
-                clientSecret: paymentIntent.client_secret,
-            });
-        });
-
-        app.post('/payments', async (req, res) => {
-            const payment = req.body;
-            const result = await paymentsCollection.insertOne(payment);
-            const id = payment.bookingId
-            const filter = { _id: ObjectId(id) }
-            const updatedDoc = {
-                $set: {
-                    paid: true,
-                    transactionId: payment.transactionId
-                }
-            }
-            const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
-            res.send(result);
+            
         })
 
         app.get('/jwt', async (req, res) => {
